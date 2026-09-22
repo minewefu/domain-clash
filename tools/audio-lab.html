@@ -1,0 +1,49 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>DOMAIN CLASH — audio lab</title>
+<style>
+  body { margin: 0; background: #111418; color: #cfd6de; font: 12px/1.4 monospace; }
+  #ui { padding: 8px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  button { background: #243040; color: #dfe8f0; border: 1px solid #3a4a5c; padding: 3px 7px; cursor: pointer; font: 11px monospace; }
+  canvas { display: block; }
+  #log { white-space: pre; padding: 8px; }
+</style></head>
+<body>
+<div id="ui"></div>
+<canvas id="cv" width="10" height="10"></canvas>
+<div id="log"></div>
+<!-- Audio lab: analysis + test functions for src/audio/*.js (tools/audio-lab.js), driven headlessly by tools/cdp.mjs:
+       node tools/cdp.mjs --page "tools/audio-lab.html" --eval "await runChecks()" --timeout 300000
+       node tools/cdp.mjs --page "tools/audio-lab.html?acts=I" --eval "await actChecks()" --timeout 900000
+     Scripts: the same list as index.html's BUILD:SCRIPTS block (read from index.html, so the lab loads exactly the audio
+     files — and the modules the scenes need — that the film loads), minus main.js / ui.js / labs.js.
+     Default mode: also minus timeline.js and every scene except src/scenes/fighttest.js; the lab builds its own timeline
+     (the real fight test, compiled by fight.js so its auto cues exist, + lab-only stub scenes for beds, the SFX catalog
+     and chunk seams).
+     Act mode (?acts=I or ?acts=I,II): timeline.js and every scene file are loaded; timeline.js reads ?acts= into
+     HT.ACTS and audio-lab.js builds HT.timeline from it exactly as main.js's HT.buildTimeline does (same order, starts,
+     durations, cues and ambience; unknown ids become 8 s silent placeholders). -->
+<script>window.__acts = new URLSearchParams(location.search).get('acts');</script>
+<script>
+window.HT = window.HT || {};
+window.__ready = false; window.__warn = []; window.__err = []; window.__scripts = [];
+const _w = console.warn.bind(console); console.warn = (...a) => { window.__warn.push(a.join(' ')); _w(...a); };
+window.addEventListener('error', e => window.__err.push(String(e.message) + ' @ ' + String(e.filename || '').split('/').slice(-2).join('/') + ':' + e.lineno));
+(function load() {
+  let list = [];
+  try {
+    const x = new XMLHttpRequest(); x.open('GET', '../index.html', false); x.send();
+    const t = x.responseText, a = t.indexOf('<!--BUILD:SCRIPTS-START-->'), b = t.indexOf('<!--BUILD:SCRIPTS-END-->');
+    list = [...t.slice(a, b).matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1]);
+  } catch (e) { window.__err.push('could not read index.html: ' + e.message); }
+  const skip = window.__acts ? /^src\/(main|ui|labs)\.js$/ : /^src\/(main|ui|labs|timeline)\.js$|^src\/scenes\/(?!fighttest\.js$)/;
+  list = list.filter(s => !skip.test(s));
+  if (!list.some(s => s.startsWith('src/audio/'))) { // fallback (index.html unreadable)
+    list = ['src/core.js', 'src/cam.js', 'src/rig.js', 'src/chars.js', 'src/poses.js', 'src/fx.js', 'src/fight.js', 'src/audio/engine.js', 'src/audio/inst.js',
+      'src/audio/sfx.js', 'src/audio/beds.js', 'src/audio/score.js', 'src/audio/score_m0.js', 'src/scenes/fighttest.js'];
+  }
+  list.push('tools/audio-lab.js');
+  window.__scripts = list;
+  for (const s of list) { const el = document.createElement('script'); el.src = '../' + s; el.async = false; el.onerror = () => window.__err.push('failed to load ' + s); document.body.appendChild(el); }
+})();
+</script>
+</body></html>

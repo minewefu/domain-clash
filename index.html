@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--BUILD:HEAD-START-->
+<title>Domain Clash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+  /* One deliberate look (a dark screening room); every colour comes from the film's Resurrect 64 palette. */
+  :root {
+    color-scheme: dark;
+    --ground: #120d15;          /* screening-room black, biased toward R64 ink */
+    --panel: #1c1520;
+    --raised: #2e222f;          /* R64 ink */
+    --line: #3e3546;            /* R64 shadow */
+    --text: #efe8e2;            /* bone */
+    --muted: #a99bb0;
+    --void: #4d9be6;            /* R64 sky — Gojo's eyes, Unlimited Void */
+    --void-hi: #8fd3ff;         /* R64 ice */
+    --shrine: #e83b3b;          /* R64 red — Malevolent Shrine */
+    --shrine-lo: #ae2334;       /* R64 crimson */
+    --gold: #f9c22b;
+    --display: 'Dela Gothic One', 'Arial Black', Impact, sans-serif;
+    --body: 'Zen Kaku Gothic New', 'Segoe UI', system-ui, sans-serif;
+    --pixel: 'DotGothic16', ui-monospace, Consolas, monospace;
+  }
+  html, body { background: var(--ground); color: var(--text); }
+  body { margin: 0; font-family: var(--body); font-size: 15px; line-height: 1.6; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-inline: 16px; padding-block: 22px 60px; display: grid; gap: 20px; }
+  header { display: grid; gap: 8px; }
+  .kicker { font-family: var(--pixel); font-size: 13px; letter-spacing: 0.08em; color: var(--muted); margin: 0; }
+  .kicker b { color: var(--void-hi); font-weight: 400; }
+  .kicker i { color: var(--shrine); font-style: normal; }
+  h1 { font-family: var(--display); font-weight: 400; font-size: clamp(34px, 7vw, 76px); line-height: 0.95; letter-spacing: 0.01em; margin: 0; position: relative; width: fit-content; max-width: 100%; text-wrap: balance; }
+  h1 .a { color: var(--text); }
+  h1 .b { color: var(--shrine); }
+  /* the cut: a hairline diagonal through the title (the film's World-Cutting Slash motif) */
+  h1::after { content: ''; position: absolute; left: -2%; right: -2%; top: 54%; height: 2px; background: var(--ground); transform: rotate(-4deg); }
+  .logline { margin: 0; color: var(--muted); max-width: 66ch; }
+  .stage { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; background: #000; overflow: hidden; outline: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  .stage:fullscreen { background: #000; display: grid; place-items: center; outline: 0; }
+  .stage:fullscreen canvas { position: static; width: min(100vw, calc(100vh * 16 / 9)); height: auto; aspect-ratio: 16 / 9; }
+  .loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(62%, 340px); display: grid; gap: 10px; text-align: center; font-family: var(--pixel); color: var(--muted); }
+  .bar { height: 6px; background: var(--raised); }
+  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--void), var(--shrine)); }
+  .ready .loading { display: none; }
+  .gate { position: absolute; inset: 0; display: none; place-items: center; background: radial-gradient(ellipse at center, rgba(18, 13, 21, 0.15), rgba(18, 13, 21, 0.82)); }
+  .ready .gate { display: grid; }
+  .gate[hidden] { display: none !important; }
+  .gate-inner { display: grid; justify-items: center; gap: 12px; text-align: center; padding: 16px; }
+  .big-play { font-family: var(--display); font-size: clamp(17px, 2.6vw, 24px); color: var(--ground); background: var(--text); border: 0; padding: 12px 26px 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 12px; box-shadow: 6px 6px 0 var(--shrine-lo), -6px -6px 0 var(--void); }
+  .big-play:hover { background: #ffffff; }
+  .big-play:active { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--shrine-lo), -3px -3px 0 var(--void); }
+  .big-play:focus-visible, .ctl:focus-visible, .act:focus-visible, #scrub:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+  .tri { width: 0; height: 0; border-left: 13px solid currentColor; border-top: 8px solid transparent; border-bottom: 8px solid transparent; }
+  .gate small { color: var(--text); opacity: 0.85; font-size: 13px; text-shadow: 0 1px 2px #000; max-width: 46ch; }
+  .controls { display: grid; grid-template-columns: auto auto 1fr auto auto auto; align-items: center; gap: 10px 12px; background: var(--panel); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 10px 12px; }
+  .ctl { font-family: var(--pixel); font-size: 15px; color: var(--text); background: var(--raised); border: 1px solid var(--line); min-width: 40px; height: 36px; padding: 0 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .ctl:hover { border-color: var(--void); }
+  .ctl[aria-pressed="true"] { color: var(--void-hi); border-color: var(--void); }
+  .time { font-family: var(--pixel); font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; min-width: 104px; }
+  .scrubwrap { position: relative; height: 36px; display: flex; align-items: center; min-width: 120px; }
+  .ticks { position: absolute; left: 0; right: 0; top: 50%; height: 14px; transform: translateY(-50%); pointer-events: none; }
+  .ticks b { position: absolute; top: 0; width: 2px; height: 14px; background: var(--line); }
+  #scrub { -webkit-appearance: none; appearance: none; width: 100%; height: 36px; background: transparent; margin: 0; cursor: pointer; position: relative; }
+  #scrub::-webkit-slider-runnable-track { height: 4px; background: linear-gradient(to right, var(--void) var(--p, 0%), var(--raised) var(--p, 0%)); }
+  #scrub::-moz-range-track { height: 4px; background: var(--raised); }
+  #scrub::-moz-range-progress { height: 4px; background: var(--void); }
+  #scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 20px; margin-top: -8px; background: var(--text); border: 0; box-shadow: 2px 2px 0 var(--shrine-lo); }
+  #scrub::-moz-range-thumb { width: 10px; height: 20px; background: var(--text); border: 0; border-radius: 0; }
+  .acts-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .acts-head h2 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 0; letter-spacing: 0.02em; }
+  .acts-head p { margin: 0; font-family: var(--pixel); color: var(--muted); font-size: 13px; }
+  .acts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .act { text-align: left; font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line); padding: 12px 14px; cursor: pointer; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; align-items: start; }
+  .act:hover:not([disabled]) { border-color: var(--muted); }
+  .act[disabled] { cursor: default; }
+  .act .num { grid-row: span 4; font-family: var(--display); font-size: 30px; line-height: 1; color: var(--muted); min-width: 1.7em; }
+  .act .ttl { font-weight: 700; font-size: 15px; line-height: 1.3; }
+  .act .span { font-family: var(--pixel); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .act .chip { display: flex; height: 6px; margin-top: 6px; }
+  .act .chip i { flex: 1; }
+  .act .state { font-family: var(--pixel); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; margin-top: 4px; }
+  .act[disabled] .ttl, .act[disabled] .chip { opacity: 0.55; }
+  .act .state.live { color: var(--void-hi); }
+  .act[aria-current="true"] { border-color: var(--text); background: #241b29; }
+  .act[aria-current="true"] .num { color: var(--text); }
+  .about { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 18px 36px; border-top: 1px solid var(--line); padding-top: 22px; }
+  .about h2 { font-family: var(--display); font-weight: 400; font-size: 18px; margin: 0 0 6px; letter-spacing: 0.02em; }
+  .about p, .about li { color: var(--muted); max-width: 64ch; }
+  .about ul { padding-left: 18px; margin: 0; display: grid; gap: 6px; }
+  .about strong { color: var(--text); font-weight: 700; }
+  .notice { font-size: 13px; }
+  .keys { color: var(--muted); font-size: 13px; }
+  kbd { font-family: var(--pixel); background: var(--raised); border: 1px solid var(--line); padding: 0 5px; color: var(--text); }
+  @media (max-width: 860px) { .acts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) {
+    .acts { grid-template-columns: minmax(0, 1fr); }
+    .controls { grid-template-columns: auto 1fr auto auto; }
+    .scrubwrap { grid-column: 1 / -1; order: 5; }
+    .time { min-width: 0; }
+    .hide-sm { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .big-play:active { transform: none; } }
+</style>
+<!--BUILD:HEAD-END-->
+</head>
+<body>
+<!--BUILD:BODY-START-->
+<div class="wrap" id="app">
+  <header>
+    <p class="kicker">SHINJUKU · DECEMBER 24 · <b>SATORU GOJO</b> vs <i>RYOMEN SUKUNA</i></p>
+    <h1><span class="a">DOMAIN</span> <span class="b">CLASH</span></h1>
+    <p class="logline">A dialogue-free, twenty-minute pixel-art fan film of the Shinjuku Showdown: the strongest sorcerer of today against the strongest of all time, told only through motion, music and sound.</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="screen" width="640" height="360" aria-label="Domain Clash film"></canvas>
+    <div class="loading" id="loading"><span>Expanding the domain…</span><div class="bar"><i id="loadbar"></i></div></div>
+    <div class="gate" id="gate">
+      <div class="gate-inner">
+        <button class="big-play" id="bigplay" type="button"><span class="tri" aria-hidden="true"></span>Play with sound</button>
+        <small id="gatenote">Every frame and every sound is generated live in your browser. Headphones recommended.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls" role="group" aria-label="Playback">
+    <button class="ctl" id="play" type="button" aria-label="Play">▶</button>
+    <span class="time" id="time">0:00 / 0:00</span>
+    <div class="scrubwrap"><div class="ticks" id="ticks"></div><input id="scrub" type="range" min="0" max="1000" step="1" value="0" aria-label="Seek"></div>
+    <button class="ctl" id="mute" type="button" aria-pressed="false" aria-label="Mute">♪ <span class="hide-sm">Sound</span></button>
+    <button class="ctl hide-sm" id="dither" type="button" aria-pressed="true" title="Snap every frame to the 64-colour palette with ordered dithering">Palette</button>
+    <button class="ctl" id="fs" type="button" aria-label="Fullscreen">⛶</button>
+  </div>
+
+  <section aria-labelledby="acts-title">
+    <div class="acts-head"><h2 id="acts-title">Six acts</h2><p id="actsnote">120 BPM · every scene starts on a bar line</p></div>
+    <nav class="acts" id="acts" aria-label="Acts"></nav>
+  </section>
+
+  <section class="about">
+    <div>
+      <h2>Made of code</h2>
+      <ul>
+        <li><strong>No image files, no audio samples, no voices.</strong> Every pixel is drawn by JavaScript on a 640×360 canvas, and every note, hit and gust of wind is synthesized with the Web Audio API.</li>
+        <li><strong>One palette.</strong> Each frame is snapped to Kerrie Lake's 64-colour Resurrect 64 with two-colour ordered dithering after Joel Yliluoma.</li>
+        <li><strong>A fight written as data.</strong> A skeletal rig, a choreography language with fighting-game frame data (startup, active, recovery, hit-stop), a street-level 3D Shinjuku, Voxel Space flyovers, and a damage ledger that keeps every crater and severed tower for the rest of the film.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Fan work</h2>
+      <p class="notice">An unofficial, non-commercial tribute. <strong>Jujutsu Kaisen © Gege Akutami / Shueisha.</strong> The characters are original pixel interpretations; no manga panels were traced and no dialogue is used.</p>
+      <p class="keys"><kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> 5 s · <kbd>M</kbd> mute · <kbd>F</kbd> fullscreen · <kbd>1</kbd>–<kbd>6</kbd> acts</p>
+    </div>
+  </section>
+</div>
+<!--BUILD:BODY-END-->
+<!--BUILD:SCRIPTS-START-->
+<script src="src/core.js"></script>
+<script src="src/cam.js"></script>
+<script src="src/rig.js"></script>
+<script src="src/chars.js"></script>
+<script src="src/chars_shiki.js"></script>
+<script src="src/poses.js"></script>
+<script src="src/city.js"></script>
+<script src="src/sets.js"></script>
+<script src="src/sets_rooms.js"></script>
+<script src="src/fx.js"></script>
+<script src="src/props.js"></script>
+<script src="src/act2_extra.js"></script>
+<script src="src/act3_extra.js"></script>
+<script src="src/act4_extra.js"></script>
+<script src="src/act5_extra.js"></script>
+<script src="src/act6_extra.js"></script>
+<script src="src/manga.js"></script>
+<script src="src/busts.js"></script>
+<script src="src/fight.js"></script>
+<script src="src/labs.js"></script>
+<!--AUDIO-START-->
+<script src="src/audio/engine.js"></script>
+<script src="src/audio/inst.js"></script>
+<script src="src/audio/sfx.js"></script>
+<script src="src/audio/beds.js"></script>
+<script src="src/audio/score.js"></script>
+<script src="src/audio/score_m0.js"></script>
+<script src="src/audio/score_a1.js"></script>
+<script src="src/audio/score_a2.js"></script>
+<script src="src/audio/score_a3.js"></script>
+<script src="src/audio/score_a4.js"></script>
+<script src="src/audio/score_a5.js"></script>
+<script src="src/audio/score_a6.js"></script>
+<!--AUDIO-END-->
+<script src="src/timeline.js"></script>
+<!--SCENES-START-->
+<script src="src/scenes/fighttest.js"></script>
+<script src="src/scenes/a1_snow.js"></script>
+<script src="src/scenes/a1_tokyo.js"></script>
+<script src="src/scenes/a1_empty.js"></script>
+<script src="src/scenes/a1_title.js"></script>
+<script src="src/scenes/a1_rooftop.js"></script>
+<script src="src/scenes/a1_opener.js"></script>
+<script src="src/scenes/a1_gojo_walk.js"></script>
+<script src="src/scenes/a1_intercut.js"></script>
+<script src="src/scenes/a1_standoff.js"></script>
+<script src="src/scenes/a1_exchange1.js"></script>
+<script src="src/scenes/a1_exchange2.js"></script>
+<script src="src/scenes/a1_clash.js"></script>
+<script src="src/scenes/a2_signs.js"></script>
+<script src="src/scenes/a2_expand.js"></script>
+<script src="src/scenes/a2_shred.js"></script>
+<script src="src/scenes/a2_watchers.js"></script>
+<script src="src/scenes/a2_rct.js"></script>
+<script src="src/scenes/a2_simple.js"></script>
+<script src="src/scenes/a2_red.js"></script>
+<script src="src/scenes/a2_clash2.js"></script>
+<script src="src/scenes/a2_blossom.js"></script>
+<script src="src/scenes/a2_three.js"></script>
+<script src="src/scenes/a2_wheel.js"></script>
+<script src="src/scenes/a2_clash5.js"></script>
+<script src="src/scenes/a3_frozen.js"></script>
+<script src="src/scenes/a3_sixth.js"></script>
+<script src="src/scenes/a3_drag.js"></script>
+<script src="src/scenes/a3_decoys.js"></script>
+<script src="src/scenes/a3_signal.js"></script>
+<script src="src/scenes/a3_chase.js"></script>
+<script src="src/scenes/a3_red.js"></script>
+<script src="src/scenes/a3_blackflash.js"></script>
+<script src="src/scenes/a3_adapt.js"></script>
+<script src="src/scenes/a4_shadow.js"></script>
+<script src="src/scenes/a4_smile.js"></script>
+<script src="src/scenes/a4_palms.js"></script>
+<script src="src/scenes/a4_rabbits.js"></script>
+<script src="src/scenes/a4_corridor.js"></script>
+<script src="src/scenes/a4_agito.js"></script>
+<script src="src/scenes/a4_sit.js"></script>
+<script src="src/scenes/a4_agito2.js"></script>
+<script src="src/scenes/a4_arm.js"></script>
+<script src="src/scenes/a4_climb.js"></script>
+<script src="src/scenes/a4_crush.js"></script>
+<script src="src/scenes/a4_flash34.js"></script>
+<script src="src/scenes/a5_red.js"></script>
+<script src="src/scenes/a5_ride.js"></script>
+<script src="src/scenes/a5_sky.js"></script>
+<script src="src/scenes/a5_purple.js"></script>
+<script src="src/scenes/a5_ash.js"></script>
+<script src="src/scenes/a5_landing.js"></script>
+<script src="src/scenes/a5_command.js"></script>
+<script src="src/scenes/a5_breath.js"></script>
+<script src="src/scenes/a6_notch.js"></script>
+<script src="src/scenes/a6_rise.js"></script>
+<script src="src/scenes/a6_cut.js"></script>
+<script src="src/scenes/a6_white.js"></script>
+<script src="src/scenes/a6_airport.js"></script>
+<script src="src/scenes/a6_salute.js"></script>
+<script src="src/scenes/a6_credits.js"></script>
+<!--SCENES-END-->
+<script src="src/main.js"></script>
+<script src="src/ui.js"></script>
+<!--BUILD:SCRIPTS-END-->
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Renders and exports (large; regenerate with tools/export.mjs and tools/review.mjs)
+dist/*.mp4
+dist/*.log
+dist/*.part
+dist/*.tmp
+dist/artifact.html
+shots/
+
+# Local tooling
+.claude/
+node_modules/
