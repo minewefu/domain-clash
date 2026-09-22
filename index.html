@@ -94,6 +94,9 @@
   .about p, .about li { color: var(--muted); max-width: 64ch; }
   .about ul { padding-left: 18px; margin: 0; display: grid; gap: 6px; }
   .about strong { color: var(--text); font-weight: 700; }
+  .about a { color: var(--void-hi); text-underline-offset: 3px; }
+  .about a:hover { color: var(--text); }
+  .about a:focus-visible { outline: 2px solid var(--void-hi); outline-offset: 2px; border-radius: 2px; }
   .notice { font-size: 13px; }
   .keys { color: var(--muted); font-size: 13px; }
   kbd { font-family: var(--pixel); background: var(--raised); border: 1px solid var(--line); padding: 0 5px; color: var(--text); }
@@ -147,6 +150,7 @@
     <div>
       <h2>Made of code</h2>
       <ul>
+        <li><strong>One prompt, one shot.</strong> The whole film — engine, 60 scenes, score — came from a single prompt and one autonomous Claude Code run of about 8½ hours, with no human feedback until it was finished. <a href="https://github.com/minewefu/domain-clash/blob/main/PROMPT.md">Read the prompt</a> · <a href="https://github.com/minewefu/domain-clash">code on GitHub</a>.</li>
         <li><strong>No image files, no audio samples, no voices.</strong> Every pixel is drawn by JavaScript on a 640×360 canvas, and every note, hit and gust of wind is synthesized with the Web Audio API.</li>
         <li><strong>One palette.</strong> Each frame is snapped to Kerrie Lake's 64-colour Resurrect 64 with two-colour ordered dithering after Joel Yliluoma.</li>
         <li><strong>A fight written as data.</strong> A skeletal rig, a choreography language with fighting-game frame data (startup, active, recovery, hit-stop), a street-level 3D Shinjuku, Voxel Space flyovers, and a damage ledger that keeps every crater and severed tower for the rest of the film.</li>
